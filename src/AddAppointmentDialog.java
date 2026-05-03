@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.time.Instant;
@@ -11,6 +12,7 @@ import java.util.Date;
 import java.util.Optional;
 
 public class AddAppointmentDialog extends JDialog {
+    private CalendarApp parent;
     private final CalendarModel model;
     private final LocalDate selectedDate;
     private boolean appointmentAdded;
@@ -23,14 +25,19 @@ public class AddAppointmentDialog extends JDialog {
     private JCheckBox reminderCheckBox;
     private JCheckBox groupMeetingCheckBox;
 
-    public AddAppointmentDialog(Frame owner, CalendarModel model, LocalDate selectedDate) {
-        super(owner, "Add Calendar Appointment", true);
+    public AddAppointmentDialog(CalendarApp parent, CalendarModel model, LocalDate selectedDate) {
+        super(parent, "Add Calendar Appointment", true);
+        this.parent = parent;
         this.model = model;
         this.selectedDate = selectedDate;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        
+        // Ensure consistent UI font
+        getContentPane().setBackground(Color.WHITE);
+        
         buildUI();
         pack();
-        setLocationRelativeTo(owner);
+        setLocationRelativeTo(parent);
     }
 
     public boolean isAppointmentAdded() {
@@ -38,52 +45,182 @@ public class AddAppointmentDialog extends JDialog {
     }
 
     private void buildUI() {
-        setLayout(new BorderLayout(10, 10));
-        JPanel inputPanel = new JPanel(new GridLayout(0, 2, 6, 6));
+        setLayout(new BorderLayout());
+        
+        // --- Header ---
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(59, 130, 246)); // blue-500
+        headerPanel.setBorder(new EmptyBorder(20, 25, 20, 25));
+        
+        JLabel titleLabel = new JLabel("New Appointment");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(Color.WHITE);
+        headerPanel.add(titleLabel, BorderLayout.WEST);
+        
+        add(headerPanel, BorderLayout.NORTH);
 
-        titleField = new JTextField();
-        locationField = new JTextField();
+        // --- Input Form ---
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBackground(Color.WHITE);
+        inputPanel.setBorder(new EmptyBorder(25, 30, 25, 30));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 10, 8, 10);
+        
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 13);
+        Font inputFont = new Font("Segoe UI", Font.PLAIN, 14);
+
+        titleField = new JTextField(20);
+        titleField.setFont(inputFont);
+        titleField.setPreferredSize(new Dimension(0, 32));
+        
+        locationField = new JTextField(20);
+        locationField.setFont(inputFont);
+        locationField.setPreferredSize(new Dimension(0, 32));
+        
+        LocalTime defaultStart = LocalTime.now().plusHours(1).withMinute(0);
+        LocalTime defaultEnd = defaultStart.plusHours(1);
+
         dateSpinner = new JSpinner(new SpinnerDateModel(dateToDate(selectedDate), null, null, Calendar.DAY_OF_MONTH));
-        startTimeSpinner = new JSpinner(new SpinnerDateModel(dateTimeToDate(selectedDate, LocalTime.of(9, 0)), null, null, Calendar.MINUTE));
-        endTimeSpinner = new JSpinner(new SpinnerDateModel(dateTimeToDate(selectedDate, LocalTime.of(10, 0)), null, null, Calendar.MINUTE));
-        reminderCheckBox = new JCheckBox("Enable reminder");
-        groupMeetingCheckBox = new JCheckBox("Group meeting");
+        startTimeSpinner = new JSpinner(new SpinnerDateModel(dateTimeToDate(selectedDate, defaultStart), null, null, Calendar.MINUTE));
+        endTimeSpinner = new JSpinner(new SpinnerDateModel(dateTimeToDate(selectedDate, defaultEnd), null, null, Calendar.MINUTE));
+        
+        setupSpinner(dateSpinner, "yyyy-MM-dd", inputFont);
+        setupSpinner(startTimeSpinner, "HH:mm", inputFont);
+        setupSpinner(endTimeSpinner, "HH:mm", inputFont);
 
-        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
-        dateSpinner.setEditor(dateEditor);
-        JSpinner.DateEditor startEditor = new JSpinner.DateEditor(startTimeSpinner, "HH:mm");
-        startTimeSpinner.setEditor(startEditor);
-        JSpinner.DateEditor endEditor = new JSpinner.DateEditor(endTimeSpinner, "HH:mm");
-        endTimeSpinner.setEditor(endEditor);
+        reminderCheckBox = new JCheckBox("Enable Reminder");
+        reminderCheckBox.setFont(inputFont);
+        reminderCheckBox.setBackground(Color.WHITE);
+        
+        groupMeetingCheckBox = new JCheckBox("Group Meeting");
+        groupMeetingCheckBox.setFont(inputFont);
+        groupMeetingCheckBox.setBackground(Color.WHITE);
 
-        inputPanel.add(new JLabel("Appointment name:"));
-        inputPanel.add(titleField);
-        inputPanel.add(new JLabel("Location:"));
-        inputPanel.add(locationField);
-        inputPanel.add(new JLabel("Date:"));
-        inputPanel.add(dateSpinner);
-        inputPanel.add(new JLabel("Start time:"));
-        inputPanel.add(startTimeSpinner);
-        inputPanel.add(new JLabel("End time:"));
-        inputPanel.add(endTimeSpinner);
-        inputPanel.add(reminderCheckBox);
-        inputPanel.add(groupMeetingCheckBox);
+        int row = 0;
+        
+        // Title
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        inputPanel.add(createStyledLabel("Title:", labelFont), gbc);
+        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
+        inputPanel.add(titleField, gbc);
+        
+        row++;
+        // Location
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        inputPanel.add(createStyledLabel("Location:", labelFont), gbc);
+        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
+        inputPanel.add(locationField, gbc);
+        
+        row++;
+        // Date
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        inputPanel.add(createStyledLabel("Date:", labelFont), gbc);
+        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
+        inputPanel.add(dateSpinner, gbc);
+        
+        row++;
+        // Start Time
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        inputPanel.add(createStyledLabel("Start Time:", labelFont), gbc);
+        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
+        inputPanel.add(startTimeSpinner, gbc);
+        
+        row++;
+        // End Time
+        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
+        inputPanel.add(createStyledLabel("End Time:", labelFont), gbc);
+        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
+        inputPanel.add(endTimeSpinner, gbc);
+        
+        row++;
+        // Checkboxes
+        JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        checkPanel.setBackground(Color.WHITE);
+        checkPanel.add(reminderCheckBox);
+        checkPanel.add(Box.createRigidArea(new Dimension(20, 0)));
+        checkPanel.add(groupMeetingCheckBox);
+        
+        gbc.gridx = 1; gbc.gridy = row;
+        inputPanel.add(checkPanel, gbc);
 
         add(inputPanel, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton addButton = new JButton("Add");
+        // --- Bottom Buttons ---
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
+        buttonPanel.setBackground(new Color(249, 250, 251)); // gray-50
+        buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(229, 231, 235)));
+        
         JButton cancelButton = new JButton("Cancel");
-
-        addButton.addActionListener(this::onAddClicked);
+        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        cancelButton.setPreferredSize(new Dimension(90, 35));
+        styleButton(cancelButton, new Color(229, 231, 235), new Color(209, 213, 219), new Color(17, 24, 39));
         cancelButton.addActionListener(e -> dispose());
+        
+        JButton addButton = new JButton("Save");
+        addButton.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        addButton.setPreferredSize(new Dimension(90, 35));
+        styleButton(addButton, new Color(59, 130, 246), new Color(37, 99, 235), Color.WHITE);
+        addButton.addActionListener(this::onSave);
 
         buttonPanel.add(cancelButton);
         buttonPanel.add(addButton);
         add(buttonPanel, BorderLayout.SOUTH);
     }
+    
+    private JLabel createStyledLabel(String text, Font font) {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
+        label.setForeground(new Color(75, 85, 99)); // gray-600
+        return label;
+    }
 
-    private void onAddClicked(ActionEvent event) {
+    private void styleButton(JButton button, Color bg, Color hoverBg, Color fg) {
+        button.setBackground(bg);
+        button.setForeground(fg);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setBackground(hoverBg);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(bg);
+            }
+        });
+    }
+    
+    private void setupSpinner(JSpinner spinner, String pattern, Font font) {
+        JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, pattern);
+        editor.getTextField().setFont(font);
+        spinner.setEditor(editor);
+        spinner.setPreferredSize(new Dimension(0, 32));
+    }
+
+    public boolean validateInput() {
+        String title = titleField.getText().trim();
+        LocalTime startTime = timeFromSpinner(startTimeSpinner);
+        LocalTime endTime = timeFromSpinner(endTimeSpinner);
+
+        if (title.isEmpty()) {
+            showError("Appointment title cannot be empty.");
+            return false;
+        }
+
+        if (!endTime.isAfter(startTime)) {
+            showError("End time must be after start time.");
+            return false;
+        }
+        return true;
+    }
+
+    private void onSave(ActionEvent event) {
+        if (!validateInput()) {
+            return;
+        }
+
         String title = titleField.getText().trim();
         String location = locationField.getText().trim();
         LocalDate appointmentDate = dateFromSpinner(dateSpinner);
@@ -92,29 +229,21 @@ public class AddAppointmentDialog extends JDialog {
         boolean reminder = reminderCheckBox.isSelected();
         boolean groupMeeting = groupMeetingCheckBox.isSelected();
 
-        if (title.isEmpty()) {
-            showError("Appointment name cannot be empty.");
-            return;
-        }
-
-        if (!endTime.isAfter(startTime)) {
-            showError("End time must be after start time.");
-            return;
-        }
-
         Appointment appointment = new Appointment(title, location.isEmpty() ? "No location" : location,
                 appointmentDate, startTime, endTime, reminder,
                 reminder ? "Reminder set for " + startTime.minusMinutes(15) : "", groupMeeting);
 
         Optional<Appointment> groupMatch = model.findGroupMeetingMatch(appointment);
-        if (groupMatch.isPresent() && !appointment.isGroupMeeting()) {
+        if (groupMatch.isPresent()) {
             int joinResult = JOptionPane.showConfirmDialog(this,
                     "A group meeting already exists with the same name and duration. Do you want to join it instead?",
                     "Join Group Meeting",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE);
             if (joinResult == JOptionPane.YES_OPTION) {
-                groupMatch.get().addParticipant("Current user");
+                Appointment match = groupMatch.get();
+                match.addParticipant("Current user");
+                DatabaseUtil.updateAppointment(match);
                 appointmentAdded = true;
                 dispose();
                 return;
@@ -123,17 +252,30 @@ public class AddAppointmentDialog extends JDialog {
 
         Optional<Appointment> conflict = model.findConflict(appointment);
         if (conflict.isPresent()) {
-            int replaceResult = JOptionPane.showConfirmDialog(this,
-                    "This time slot conflicts with an existing appointment:\n" + conflict.get() + "\nDo you want to replace it?",
+            Object[] options = {"Replace", "Available Time", "Cancel"};
+            int result = JOptionPane.showOptionDialog(this,
+                    "This time slot conflicts with an existing appointment:\n" + conflict.get().getTitle() + "\nWhat do you want to do?",
                     "Time Conflict",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
-            if (replaceResult != JOptionPane.YES_OPTION) {
-                return;
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+
+            if (result == 0) { // Replace
+                model.replaceAppointment(conflict.get(), appointment);
+                appointmentAdded = true;
+                dispose();
+            } else if (result == 1) { // Available Time
+                LocalTime newStartTime = model.findNextAvailableTime(appointmentDate, startTime, java.time.Duration.between(startTime, endTime));
+                if (newStartTime != null) {
+                    startTimeSpinner.setValue(dateTimeToDate(appointmentDate, newStartTime));
+                    endTimeSpinner.setValue(dateTimeToDate(appointmentDate, newStartTime.plusMinutes(java.time.Duration.between(startTime, endTime).toMinutes())));
+                    JOptionPane.showMessageDialog(this, "Suggested available time: " + newStartTime, "Available Time Found", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "No available time found on this day.", "No Time", JOptionPane.ERROR_MESSAGE);
+                }
             }
-            model.replaceAppointment(conflict.get(), appointment);
-            appointmentAdded = true;
-            dispose();
             return;
         }
 
@@ -143,7 +285,7 @@ public class AddAppointmentDialog extends JDialog {
     }
 
     private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Invalid appointment", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, "Invalid input", JOptionPane.ERROR_MESSAGE);
     }
 
     private static Date dateToDate(LocalDate localDate) {

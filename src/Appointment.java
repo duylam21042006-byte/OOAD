@@ -54,9 +54,6 @@ public class Appointment {
         return reminder;
     }
 
-    public boolean hasReminder() {
-        return reminder;
-    }
 
     public String getReminderNote() {
         return reminderNote;
@@ -86,12 +83,13 @@ public class Appointment {
         if (!date.equals(other.date)) {
             return false;
         }
-        return !startTime.isAfter(other.endTime) && !endTime.isBefore(other.startTime);
+        return startTime.isBefore(other.endTime) && endTime.isAfter(other.startTime);
     }
 
     public boolean isSameGroupMeetingCandidate(Appointment other) {
         return other.isGroupMeeting()
                 && title.equalsIgnoreCase(other.title)
+                && date.equals(other.date)
                 && getDurationMinutes() == other.getDurationMinutes();
     }
 
@@ -99,6 +97,22 @@ public class Appointment {
         if (participantName != null && !participantName.isBlank()) {
             participants.add(participantName);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Appointment that = (Appointment) o;
+        return title.equals(that.title) && date.equals(that.date) && startTime.equals(that.startTime);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = title.hashCode();
+        result = 31 * result + date.hashCode();
+        result = 31 * result + startTime.hashCode();
+        return result;
     }
 
     @Override

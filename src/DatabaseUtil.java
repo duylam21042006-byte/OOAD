@@ -53,19 +53,22 @@ public class DatabaseUtil {
     
     public static void deleteAppointment(Appointment appointment) {
         List<SerializableAppointment> appointments = loadAppointmentsFromFile();
-        appointments.removeIf(a -> a.title.equals(appointment.getTitle()) && 
-                              a.date.equals(appointment.getDate().toString()) &&
-                              a.startTime.equals(appointment.getStartTime().toString()));
+        appointments.removeIf(a -> {
+            Appointment appt = a.toAppointment();
+            return appt.getTitle().equals(appointment.getTitle()) && 
+                   appt.getDate().equals(appointment.getDate()) &&
+                   appt.getStartTime().equals(appointment.getStartTime());
+        });
         saveAppointmentsToFile(appointments);
     }
     
     public static void updateAppointment(Appointment appointment) {
         List<SerializableAppointment> appointments = loadAppointmentsFromFile();
         for (int i = 0; i < appointments.size(); i++) {
-            SerializableAppointment sa = appointments.get(i);
-            if (sa.title.equals(appointment.getTitle()) && 
-                sa.date.equals(appointment.getDate().toString()) &&
-                sa.startTime.equals(appointment.getStartTime().toString())) {
+            Appointment appt = appointments.get(i).toAppointment();
+            if (appt.getTitle().equals(appointment.getTitle()) && 
+                appt.getDate().equals(appointment.getDate()) &&
+                appt.getStartTime().equals(appointment.getStartTime())) {
                 appointments.set(i, new SerializableAppointment(appointment));
                 break;
             }
@@ -105,36 +108,44 @@ public class DatabaseUtil {
 class SerializableAppointment implements Serializable {
     private static final long serialVersionUID = 1L;
     
-    String title;
-    String location;
-    String date;
-    String startTime;
-    String endTime;
-    boolean reminder;
-    String reminderNote;
-    boolean groupMeeting;
+    private String title;
+    private String location;
+    private LocalDate date;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private boolean reminder;
+    private String reminderNote;
+    private boolean groupMeeting;
+    private List<String> participants;
     
     public SerializableAppointment(Appointment a) {
         this.title = a.getTitle();
         this.location = a.getLocation();
-        this.date = a.getDate().toString();
-        this.startTime = a.getStartTime().toString();
-        this.endTime = a.getEndTime().toString();
+        this.date = a.getDate();
+        this.startTime = a.getStartTime();
+        this.endTime = a.getEndTime();
         this.reminder = a.isReminder();
         this.reminderNote = a.getReminderNote();
         this.groupMeeting = a.isGroupMeeting();
+        this.participants = new ArrayList<>(a.getParticipants());
     }
     
     public Appointment toAppointment() {
-        return new Appointment(
+        Appointment a = new Appointment(
                 title,
                 location,
-                LocalDate.parse(date),
-                LocalTime.parse(startTime),
-                LocalTime.parse(endTime),
+                date,
+                startTime,
+                endTime,
                 reminder,
                 reminderNote,
                 groupMeeting
         );
+        if (participants != null) {
+            for(String p : participants) {
+                a.addParticipant(p);
+            }
+        }
+        return a;
     }
 }
