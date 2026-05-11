@@ -54,7 +54,6 @@ public class Appointment {
         return reminder;
     }
 
-
     public String getReminderNote() {
         return reminderNote;
     }
@@ -75,10 +74,12 @@ public class Appointment {
         this.id = id;
     }
 
+    // Độ dài cuộc hẹn tính theo phút
     public int getDurationMinutes() {
         return (int) Duration.between(startTime, endTime).toMinutes();
     }
 
+    // Kiểm tra xem hai cuộc hẹn có trùng giờ trên cùng một ngày không
     public boolean overlapsWith(Appointment other) {
         if (!date.equals(other.date)) {
             return false;
@@ -86,6 +87,7 @@ public class Appointment {
         return startTime.isBefore(other.endTime) && endTime.isAfter(other.startTime);
     }
 
+    // Kiểm tra xem cuộc hẹn này có thể là cuộc họp nhóm cùng thời lượng và tên
     public boolean isSameGroupMeetingCandidate(Appointment other) {
         return other.isGroupMeeting()
                 && title.equalsIgnoreCase(other.title)
@@ -93,6 +95,7 @@ public class Appointment {
                 && getDurationMinutes() == other.getDurationMinutes();
     }
 
+    // Thêm người tham gia vào cuộc họp nhóm
     public void addParticipant(String participantName) {
         if (participantName != null && !participantName.isBlank()) {
             participants.add(participantName);

@@ -32,7 +32,6 @@ public class AddAppointmentDialog extends JDialog {
         this.selectedDate = selectedDate;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         
-        // Ensure consistent UI font
         getContentPane().setBackground(Color.WHITE);
         
         buildUI();
@@ -40,14 +39,16 @@ public class AddAppointmentDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
+    // Kiểm tra xem cuộc hẹn đã được thêm thành công chưa
     public boolean isAppointmentAdded() {
         return appointmentAdded;
     }
 
+    // Xây dựng giao diện nhập liệu cho dialog
     private void buildUI() {
         setLayout(new BorderLayout());
         
-        // --- Header ---
+        // Header trên cùng của dialog
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(59, 130, 246)); // blue-500
         headerPanel.setBorder(new EmptyBorder(20, 25, 20, 25));
@@ -59,7 +60,7 @@ public class AddAppointmentDialog extends JDialog {
         
         add(headerPanel, BorderLayout.NORTH);
 
-        // --- Input Form ---
+        // Form nhập liệu bên trong dialog
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBackground(Color.WHITE);
         inputPanel.setBorder(new EmptyBorder(25, 30, 25, 30));
@@ -99,42 +100,42 @@ public class AddAppointmentDialog extends JDialog {
 
         int row = 0;
         
-        // Title
+        // Tiêu đề
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
         inputPanel.add(createStyledLabel("Title:", labelFont), gbc);
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
         inputPanel.add(titleField, gbc);
         
         row++;
-        // Location
+        // Địa điểm
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
         inputPanel.add(createStyledLabel("Location:", labelFont), gbc);
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
         inputPanel.add(locationField, gbc);
         
         row++;
-        // Date
+        // Ngày hẹn
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
         inputPanel.add(createStyledLabel("Date:", labelFont), gbc);
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
         inputPanel.add(dateSpinner, gbc);
         
         row++;
-        // Start Time
+        // Giờ bắt đầu
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
         inputPanel.add(createStyledLabel("Start Time:", labelFont), gbc);
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
         inputPanel.add(startTimeSpinner, gbc);
         
         row++;
-        // End Time
+        // Giờ kết thúc
         gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.0;
         inputPanel.add(createStyledLabel("End Time:", labelFont), gbc);
         gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 1.0;
         inputPanel.add(endTimeSpinner, gbc);
         
         row++;
-        // Checkboxes
+        // Checkboxes bổ sung
         JPanel checkPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         checkPanel.setBackground(Color.WHITE);
         checkPanel.add(reminderCheckBox);
@@ -146,7 +147,7 @@ public class AddAppointmentDialog extends JDialog {
 
         add(inputPanel, BorderLayout.CENTER);
 
-        // --- Bottom Buttons ---
+        // Nút lưu / hủy
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 15));
         buttonPanel.setBackground(new Color(249, 250, 251)); // gray-50
         buttonPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(229, 231, 235)));
@@ -168,6 +169,7 @@ public class AddAppointmentDialog extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
     }
     
+    // Tạo label với font và màu sắc chuẩn
     private JLabel createStyledLabel(String text, Font font) {
         JLabel label = new JLabel(text);
         label.setFont(font);
@@ -175,6 +177,7 @@ public class AddAppointmentDialog extends JDialog {
         return label;
     }
 
+    // Tùy biến giao diện cho nút bấm
     private void styleButton(JButton button, Color bg, Color hoverBg, Color fg) {
         button.setBackground(bg);
         button.setForeground(fg);
@@ -192,6 +195,7 @@ public class AddAppointmentDialog extends JDialog {
         });
     }
     
+    // Cấu hình JSpinner với định dạng ngày/giờ
     private void setupSpinner(JSpinner spinner, String pattern, Font font) {
         JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, pattern);
         editor.getTextField().setFont(font);
@@ -199,6 +203,7 @@ public class AddAppointmentDialog extends JDialog {
         spinner.setPreferredSize(new Dimension(0, 32));
     }
 
+    // Kiểm tra dữ liệu nhập liệu trước khi lưu
     public boolean validateInput() {
         String title = titleField.getText().trim();
         LocalTime startTime = timeFromSpinner(startTimeSpinner);
@@ -216,6 +221,7 @@ public class AddAppointmentDialog extends JDialog {
         return true;
     }
 
+    // Xử lý sự kiện lưu cuộc hẹn
     private void onSave(ActionEvent event) {
         if (!validateInput()) {
             return;
@@ -284,23 +290,28 @@ public class AddAppointmentDialog extends JDialog {
         dispose();
     }
 
+    // Hiển thị thông báo lỗi nhập liệu
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Invalid input", JOptionPane.ERROR_MESSAGE);
     }
 
+    // Chuyển LocalDate sang java.util.Date để dùng với SpinnerDateModel
     private static Date dateToDate(LocalDate localDate) {
         return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
+    // Chuyển LocalDate và LocalTime sang java.util.Date để dùng với spinner
     private static Date dateTimeToDate(LocalDate date, LocalTime time) {
         LocalDateTime dateTime = LocalDateTime.of(date, time);
         return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    // Đọc ngày từ spinner
     private static LocalDate dateFromSpinner(JSpinner spinner) {
         return Instant.ofEpochMilli(((Date) spinner.getValue()).getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
+    // Đọc giờ từ spinner
     private static LocalTime timeFromSpinner(JSpinner spinner) {
         return Instant.ofEpochMilli(((Date) spinner.getValue()).getTime()).atZone(ZoneId.systemDefault()).toLocalTime().withSecond(0).withNano(0);
     }

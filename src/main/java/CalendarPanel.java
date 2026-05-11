@@ -7,17 +7,22 @@ import java.time.YearMonth;
 import java.util.function.Consumer;
 
 public class CalendarPanel extends JPanel {
+    // Mô hình chứa dữ liệu cuộc hẹn để kiểm tra ngày có lịch hay không
     private final CalendarModel model;
+    // Ngày hiện tại đang được chọn trong lịch
     private LocalDate selectedDate;
+    // Tháng hiện tại đang hiển thị
     private YearMonth currentMonth;
+    // Callback gọi về CalendarApp khi người dùng click chọn ngày
     private final Consumer<LocalDate> dateSelectionCallback;
     
-    // Dynamic sizes based on panel width/height
+    // Kích thước cell sẽ tính theo kích thước panel
     private int cellWidth;
-    private int cellHeight;
+    private int cellHeight; 
     private static final int GRID_COLS = 7;
     private static final int HEADER_HEIGHT = 60;
     
+    // Hàng và cột đang hover để vẽ hiệu ứng
     private int hoveredRow = -1;
     private int hoveredCol = -1;
 
@@ -30,6 +35,7 @@ public class CalendarPanel extends JPanel {
         setPreferredSize(new Dimension(500, 450));
         setBackground(Color.WHITE);
         
+        // Click chọn ngày
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -42,6 +48,8 @@ public class CalendarPanel extends JPanel {
                 repaint();
             }
         });
+        
+        // Hover di chuột trên bảng lịch
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -50,6 +58,7 @@ public class CalendarPanel extends JPanel {
         });
     }
 
+    // Thay đổi tháng hiển thị và vẽ lại
     public void setCurrentMonth(YearMonth month) {
         this.currentMonth = month;
         repaint();
@@ -59,11 +68,13 @@ public class CalendarPanel extends JPanel {
         return currentMonth;
     }
 
+    // Cập nhật ngày đang chọn và vẽ lại lịch
     public void setSelectedDate(LocalDate date) {
         this.selectedDate = date;
         repaint();
     }
 
+    // Xử lý click chọn ô ngày trong lịch
     private void handleDateClick(int x, int y) {
         if (y < HEADER_HEIGHT) return;
         
@@ -81,6 +92,7 @@ public class CalendarPanel extends JPanel {
         }
     }
 
+    // Xử lý di chuột để hiển thị hiệu ứng hover
     private void handleMouseMove(int x, int y) {
         if (y < HEADER_HEIGHT) {
             if (hoveredRow != -1 || hoveredCol != -1) {
@@ -107,6 +119,7 @@ public class CalendarPanel extends JPanel {
         }
     }
 
+    // Tính ngày của ô tại hàng và cột cụ thể trong lịch
     private LocalDate getDateAtPosition(int row, int col) {
         LocalDate firstDay = currentMonth.atDay(1);
         int dayOfWeek = firstDay.getDayOfWeek().getValue() % 7;
@@ -132,15 +145,14 @@ public class CalendarPanel extends JPanel {
         drawGridAndDates(g2d);
     }
 
+    // Vẽ phần header gồm tên tháng và thứ trong tuần
     private void drawHeader(Graphics2D g) {
-        // Month / Year Title
         g.setColor(new Color(17, 24, 39)); // gray-900
         g.setFont(new Font("Segoe UI", Font.BOLD, 22));
         String monthYear = currentMonth.format(java.time.format.DateTimeFormatter.ofPattern("MMMM yyyy"));
         FontMetrics fm = g.getFontMetrics();
         g.drawString(monthYear, 20, 35);
         
-        // Days of week
         String[] dayNames = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         g.setColor(new Color(107, 114, 128)); // gray-500
         g.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -153,11 +165,11 @@ public class CalendarPanel extends JPanel {
             g.drawString(dayNames[i], textX, yDayNames);
         }
         
-        // Separator Line
         g.setColor(new Color(243, 244, 246)); // gray-100
         g.drawLine(0, HEADER_HEIGHT, getWidth(), HEADER_HEIGHT);
     }
 
+    // Vẽ các ngày trong tháng, chọn ngày, highlight ngày hôm nay và dấu chấm lịch
     private void drawGridAndDates(Graphics2D g) {
         LocalDate firstDay = currentMonth.atDay(1);
         int dayOfWeek = firstDay.getDayOfWeek().getValue() % 7;
@@ -168,7 +180,6 @@ public class CalendarPanel extends JPanel {
         
         g.setFont(new Font("Segoe UI", Font.PLAIN, 15));
         
-        // Draw grid lines
         g.setColor(new Color(243, 244, 246)); // gray-100
         for (int i = 1; i <= 6; i++) {
             g.drawLine(0, HEADER_HEIGHT + i * cellHeight, getWidth(), HEADER_HEIGHT + i * cellHeight);
@@ -185,13 +196,11 @@ public class CalendarPanel extends JPanel {
             boolean hasAppointments = !model.getAppointmentsForDate(date).isEmpty();
             boolean isToday = date.equals(LocalDate.now());
             
-            // Draw Hover Effect
             if (row == hoveredRow && col == hoveredCol && !date.equals(selectedDate)) {
                 g.setColor(new Color(243, 244, 246)); // gray-100
                 g.fillRect(x + 1, y + 1, cellWidth - 1, cellHeight - 1);
             }
             
-            // Draw Selection Circle
             if (date.equals(selectedDate)) {
                 g.setColor(new Color(59, 130, 246)); // blue-500
                 int circleSize = Math.min(cellWidth, cellHeight) - 20;
@@ -210,17 +219,15 @@ public class CalendarPanel extends JPanel {
                 }
             }
             
-            // Draw Date Text
             FontMetrics fm = g.getFontMetrics();
             String dayStr = String.valueOf(day);
             int textX = x + (cellWidth - fm.stringWidth(dayStr)) / 2;
             int textY = y + (cellHeight - fm.getHeight()) / 2 + fm.getAscent();
             g.drawString(dayStr, textX, textY);
             
-            // Draw Appointment Dot
             if (hasAppointments) {
                 if (date.equals(selectedDate)) {
-                    g.setColor(Color.WHITE); // White dot if selected
+                    g.setColor(Color.WHITE);
                 } else {
                     g.setColor(new Color(59, 130, 246)); // blue dot
                 }

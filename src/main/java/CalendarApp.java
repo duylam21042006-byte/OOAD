@@ -5,8 +5,11 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 
 public class CalendarApp extends JFrame {
+    // Mô hình dữ liệu chứa danh sách cuộc hẹn
     private final CalendarModel model;
+    // Bảng lịch hiển thị tháng và ngày
     private final CalendarPanel calendarPanel;
+    // Model cho danh sách cuộc hẹn trong sidebar
     private final DefaultListModel<Appointment> appointmentListModel;
     private JLabel selectedDateLabel;
     private LocalDate currentSelectedDate;
@@ -14,20 +17,20 @@ public class CalendarApp extends JFrame {
     private JScrollPane listScrollPane;
 
     public CalendarApp() {
-        // Set System Look and Feel for modern native appearance
+        // Thiết lập giao diện hệ thống để trông giống ứng dụng native hơn
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Apply global font settings
+        // Áp dụng font mặc định cho toàn bộ UI
         setUIFont(new javax.swing.plaf.FontUIResource("Segoe UI", Font.PLAIN, 14));
 
         model = new CalendarModel();
         currentSelectedDate = LocalDate.now();
         
-        // Initialize database and load appointments
+        // Khởi tạo cơ sở dữ liệu và tải danh sách cuộc hẹn từ file
         DatabaseUtil.initializeDatabase();
         DatabaseUtil.loadAllAppointments(model);
         
@@ -65,6 +68,7 @@ public class CalendarApp extends JFrame {
         JPanel datePickerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         datePickerPanel.setOpaque(false);
         
+        // Bộ chọn ngày tháng năm ở đầu ứng dụng
         JSpinner daySpinner = new JSpinner(new SpinnerNumberModel(currentSelectedDate.getDayOfMonth(), 1, 31, 1));
         JSpinner monthSpinner = new JSpinner(new SpinnerNumberModel(currentSelectedDate.getMonthValue(), 1, 12, 1));
         JSpinner yearSpinner = new JSpinner(new SpinnerNumberModel(currentSelectedDate.getYear(), 1900, 2100, 1));
@@ -196,9 +200,11 @@ public class CalendarApp extends JFrame {
         centerContent.add(sidePanel, BorderLayout.EAST);
         add(centerContent, BorderLayout.CENTER);
 
+        // Lần đầu tiên hiển thị danh sách cuộc hẹn cho ngày hiện tại
         refreshAppointments();
     }
 
+    // Cập nhật lại giao diện khi người dùng chọn ngày mới
     private void onDateSelected() {
         calendarPanel.setSelectedDate(currentSelectedDate);
         selectedDateLabel.setText(formatDate(currentSelectedDate));
@@ -206,6 +212,7 @@ public class CalendarApp extends JFrame {
         calendarPanel.repaint();
     }
 
+    // Phiên bản callback khi CalendarPanel trả về ngày đã chọn
     private void onDateSelected(LocalDate selectedDate) {
         currentSelectedDate = selectedDate;
         calendarPanel.setSelectedDate(selectedDate);
@@ -213,6 +220,7 @@ public class CalendarApp extends JFrame {
         refreshAppointments();
     }
 
+    // Mở hộp thoại tạo cuộc hẹn mới
     private void openAddDialog() {
         AddAppointmentDialog dialog = new AddAppointmentDialog(this, model, currentSelectedDate);
         dialog.setVisible(true);
@@ -222,6 +230,7 @@ public class CalendarApp extends JFrame {
         }
     }
 
+    // Tải lại danh sách cuộc hẹn cho ngày đang chọn
     private void refreshAppointments() {
         appointmentListModel.clear();
         model.getAppointmentsForDate(currentSelectedDate).forEach(appointmentListModel::addElement);
@@ -236,6 +245,7 @@ public class CalendarApp extends JFrame {
         }
     }
 
+    // Định dạng ngày để hiển thị ở sidebar
     private String formatDate(LocalDate date) {
         String[] dayNames = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
         String[] monthNames = {"January", "February", "March", "April", "May", "June", 
@@ -244,6 +254,7 @@ public class CalendarApp extends JFrame {
                monthNames[date.getMonthValue() - 1] + " " + date.getDayOfMonth();
     }
 
+    // Tùy biến giao diện cho các nút
     private void styleButton(JButton button, Color bg, Color hoverBg, Color fg) {
         button.setBackground(bg);
         button.setForeground(fg);

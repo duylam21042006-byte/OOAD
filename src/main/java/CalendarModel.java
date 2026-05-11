@@ -7,9 +7,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class CalendarModel {
+    // Danh sách tất cả cuộc hẹn trong bộ nhớ
     private final List<Appointment> appointments = new ArrayList<>();
+    // Danh sách riêng cho các cuộc hẹn có reminder
     private final List<Appointment> reminders = new ArrayList<>();
 
+    // Trả về danh sách cuộc hẹn theo ngày, sắp xếp theo thời gian bắt đầu
     public List<Appointment> getAppointmentsForDate(LocalDate date) {
         return appointments.stream()
                 .filter(a -> a.getDate().equals(date))
@@ -17,18 +20,21 @@ public class CalendarModel {
                 .collect(Collectors.toList());
     }
 
+    // Tìm cuộc hẹn đang xung đột thời gian với appointment mới
     public Optional<Appointment> findConflict(Appointment appointment) {
         return appointments.stream()
                 .filter(a -> a.overlapsWith(appointment))
                 .findFirst();
     }
 
+    // Tìm cuộc họp nhóm trùng tên, cùng ngày và cùng thời lượng
     public Optional<Appointment> findGroupMeetingMatch(Appointment appointment) {
         return appointments.stream()
                 .filter(a -> a.isSameGroupMeetingCandidate(appointment))
                 .findFirst();
     }
 
+    // Thêm cuộc hẹn mới vào bộ nhớ và lưu vào file
     public void addAppointment(Appointment appointment) {
         appointments.add(appointment);
         if (appointment.isReminder()) {
@@ -37,6 +43,7 @@ public class CalendarModel {
         DatabaseUtil.saveAppointment(appointment);
     }
 
+    // Thêm cuộc hẹn chỉ từ database, không ghi lại file lần nữa
     public void addAppointmentFromDB(Appointment appointment) {
         appointments.add(appointment);
         if (appointment.isReminder()) {
@@ -44,6 +51,7 @@ public class CalendarModel {
         }
     }
 
+    // Thay thế cuộc hẹn cũ bằng cuộc hẹn mới và cập nhật file dữ liệu
     public void replaceAppointment(Appointment oldAppointment, Appointment newAppointment) {
         appointments.remove(oldAppointment);
         if (oldAppointment.isReminder()) {
@@ -63,6 +71,7 @@ public class CalendarModel {
         return reminders;
     }
 
+    // Tìm giờ khả dụng tiếp theo trong ngày nếu khoảng thời gian hiện tại bị xung đột
     public LocalTime findNextAvailableTime(LocalDate date, LocalTime requestedStart, java.time.Duration duration) {
         List<Appointment> dayAppts = getAppointmentsForDate(date);
         LocalTime currentTry = requestedStart;
